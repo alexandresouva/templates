@@ -1,26 +1,13 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
-import { of, Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
-
-const fakeObservable = of([1, 2, 3]);
+import { Component, OnInit } from '@angular/core';
 
 @Component({
-  selector: 'app-my-component',
+  selector: '<%= dasherize(name) %>-my-component',
   templateUrl: './my-component.component.html',
   styleUrls: ['./my-component.component.scss'],
 })
 
-export class MyComponent implements OnInit, OnDestroy {
-  private readonly destroy$ = new Subject();
-  stream$ = fakeObservable;
-  constructor() {}
-
+export class MyComponent implements OnInit {
   ngOnInit() {
-    this.stream$.pipe(takeUntil(this.destroy$)).subscribe();
-  }
-
-  ngOnDestroy() {
-    this.destroy$.next();
-    this.destroy$.complete();
+    console.log('hello world!')
   }
 }
