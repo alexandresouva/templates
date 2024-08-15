@@ -10,7 +10,7 @@ const fakeObservable = of([1, 2, 3]);
   styleUrls: ['./my-component.component.scss'],
 })
 
-export class myComponent implements OnInit, OnDestroy {
+export class MyComponent implements OnInit, OnDestroy {
   private readonly destroy$ = new Subject();
   stream$ = fakeObservable;
   constructor() {}
