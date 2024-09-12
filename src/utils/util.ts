@@ -27,3 +27,23 @@ export function getSourceFile(path: string, tree?: Tree): ts.SourceFile {
     true
   );
 }
+
+/**
+ * Encontra a posição onde o import statement deve ser inserido no arquivo.
+ *
+ * @param sourceFile - O SourceFile do arquivo de roteamento.
+ * @returns A posição para a inserção do import statement.
+ */
+export function findImportInsertionIndex(sourceFile: ts.SourceFile): number {
+  let importIndex = 0;
+  const importStatements = sourceFile.statements.filter((statement) =>
+    ts.isImportDeclaration(statement)
+  );
+
+  if (importStatements.length > 0) {
+    const lastImport = importStatements[importStatements.length - 1];
+    importIndex = lastImport.getEnd();
+  }
+
+  return importIndex;
+}

@@ -37,7 +37,6 @@ const routes: RouteConfig[] = [
 export function templates(options: IOptions): Rule {
   return (tree: Tree, context: SchematicContext) => {
     const appModulePath = path.join(__dirname, 'app.module.ts.template');
-    const routingModulePath = 'src/app/app-routing.module.ts';
 
     const { name: sigla } = options;
     if (sigla.length !== 3) {
@@ -48,8 +47,8 @@ export function templates(options: IOptions): Rule {
       buildComponent({ ...options, skipImport: true }),
       addImportsToAppModule(appModulePath),
       addHTMLBaseToAppComponent('<my-component></my-component>'),
-      () => addRoutesToRoutingModule(tree, context, routes),
-      () => addImportsToRoutingModule(routingModulePath, routes),
+      () => addRoutesToRoutingModule(tree, routes),
+      () => addImportsToRoutingModule(routes),
     ])(tree, context);
   };
 }

@@ -12,7 +12,7 @@ import {
 import { Change, InsertChange } from '@schematics/angular/utility/change';
 import ts = require('typescript');
 import { IImport, RouteConfig } from './interfaces';
-import { getSourceFile } from './util';
+import { findImportInsertionIndex, getSourceFile } from './util';
 
 /**
  * Adiciona um array de rotas ao módulo de roteamento.
@@ -23,72 +23,89 @@ import { getSourceFile } from './util';
  */
 export function addRoutesToRoutingModule(
   tree: Tree,
-  context: SchematicContext,
   routesToBeAdded: RouteConfig[]
 ): void {
-  const modulePath = 'src/app/app-routing.module.ts';
-
-  if (!tree.exists(modulePath)) {
+  // Lanca um erro se o arquivo de roteamento não existir
+  const routingModulePath = 'src/app/app-routing.module.ts';
+  if (!tree.exists(routingModulePath)) {
     throw new SchematicsException(
-      `O módulo de roteamento em ${modulePath} não foi encontrado.`
+      `O arquivo "app-routing.module.ts" não foi encontrado em ${routingModulePath}.`
     );
   }
 
-  const sourceFile = getSourceFile(modulePath, tree);
+  // Lança um erro se o módulo de roteamento não for encontrado
+  const sourceFile = getSourceFile(routingModulePath, tree);
   const routerModuleDeclaration = getRouterModuleDeclaration(sourceFile);
-
   if (!routerModuleDeclaration) {
     throw new SchematicsException(
-      `O módulo de roteamento não foi encontrado em ${modulePath}.`
+      `O módulo de roteamento (RouterModule) não foi encontrado em ${routingModulePath}.`
     );
   }
 
-  const recorder = tree.beginUpdate(modulePath);
-
-  // Obtém todas as rotas existentes
+  // Obtem todas as rotas existentes no projeto de destino
   const existingRoutes =
     sourceFile.getFullText().match(/path: '([^']*)', component: (\w+)/g) || [];
+  const isExistingRoutesEmpty = existingRoutes.length === 0;
+
+  // Prepara a Tree para receber as mudanças
+  const recorder = tree.beginUpdate(routingModulePath);
 
   routesToBeAdded.forEach(({ path, component }, index) => {
-    const routeExists = existingRoutes.some((route) =>
+    const isRouteAlreadyPresent = existingRoutes.some((route) =>
       route.includes(`path: '${path}'`)
     );
 
-    if (!routeExists) {
+    // Interrompe a importação se a rota já estiver presente
+    if (isRouteAlreadyPresent) {
+      return;
+    }
+
+    // Se o array de rotas existente estiver vazio, é preciso tratar a string de rota
+    if (isExistingRoutesEmpty) {
       const isLastRoute = index === routesToBeAdded.length - 1;
-      const routeLiteral = isLastRoute
+      const route = isLastRoute
         ? `{ path: '${path}', component: ${component} } \n`
         : `{ path: '${path}', component: ${component} },`;
       const routeChange = addRouteDeclarationToModule(
         sourceFile,
-        modulePath,
-        `\n ${routeLiteral}`
+        routingModulePath,
+        `\n ${route}`
       );
 
       if (routeChange instanceof InsertChange) {
         recorder.insertLeft(routeChange.pos, routeChange.toAdd);
       }
+    } else {
+      // Se já estiver algum elemento, o Angular CDK faz o tratamento automaticamente
+      const route = `{ path: '${path}', component: ${component} }`;
 
-      context.logger.info(
-        `Rota ${path} -> ${component} adicionada em ${modulePath}`
+      const routeChange = addRouteDeclarationToModule(
+        sourceFile,
+        routingModulePath,
+        route
       );
+
+      if (routeChange instanceof InsertChange) {
+        recorder.insertLeft(routeChange.pos, routeChange.toAdd);
+      }
     }
   });
 
+  // Efetua as mudanças no arquivo de roteamento
   tree.commitUpdate(recorder);
 }
 
-export function addImportsToRoutingModule(
-  routingModulePath: string,
-  routes: RouteConfig[]
-): Rule {
+export function addImportsToRoutingModule(routes: RouteConfig[]): Rule {
   return (tree: Tree, _context: SchematicContext) => {
+    // Verifica se o arquivo de roteamento existe
+    const routingModulePath = 'src/app/app-routing.module.ts';
     if (!tree.exists(routingModulePath)) {
       throw new SchematicsException(
         `Não foi possível adicionar as importações. O arquivo ${routingModulePath} não existe.`
       );
     }
 
+    // Prepara os imports
     const sourceFile = getSourceFile(routingModulePath, tree);
     const importsToAdd = routes.map((route) => ({
       classifiedName: route.component,
@@ -100,6 +117,7 @@ export function addImportsToRoutingModule(
       importsToAdd
     );
 
+    // Aplica as mudanças
     const recorder = tree.beginUpdate(routingModulePath);
     changes.forEach((change) => {
       if (change instanceof InsertChange) {
@@ -137,31 +155,12 @@ function getImportChanges(
     );
 
     if (!existingImport) {
-      // Encontrar a posição de inserção do import statement
+      // Encontra a posição de inserção do import statement
       const importIndex = findImportInsertionIndex(sourceFile);
+      // Adiciona o import
       changes.push(new InsertChange(modulePath, importIndex, importStatement));
     }
   });
 
   return changes;
-}
-
-/**
- * Encontra a posição onde o import statement deve ser inserido no arquivo.
- *
- * @param sourceFile - O SourceFile do arquivo de roteamento.
- * @returns A posição para a inserção do import statement.
- */
-function findImportInsertionIndex(sourceFile: ts.SourceFile): number {
-  let importIndex = 0;
-  const importStatements = sourceFile.statements.filter((statement) =>
-    ts.isImportDeclaration(statement)
-  );
-
-  if (importStatements.length > 0) {
-    const lastImport = importStatements[importStatements.length - 1];
-    importIndex = lastImport.getEnd();
-  }
-
-  return importIndex;
 }
