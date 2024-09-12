@@ -14,6 +14,7 @@ import {
   addImportsToRoutingModule,
   addRoutesToRoutingModule,
 } from '../utils/route-helper';
+import { addHTMLBaseToAppComponent } from '../utils/imports-helper';
 
 const routes: RouteConfig[] = [
   {
@@ -32,6 +33,7 @@ const routes: RouteConfig[] = [
     importPath: './contact/contact.component',
   },
 ];
+
 export function templates(options: IOptions): Rule {
   return (tree: Tree, context: SchematicContext) => {
     const appModulePath = path.join(__dirname, 'app.module.ts.template');
@@ -45,6 +47,7 @@ export function templates(options: IOptions): Rule {
     return chain([
       buildComponent({ ...options, skipImport: true }),
       addImportsToAppModule(appModulePath),
+      addHTMLBaseToAppComponent('<my-component></my-component>'),
       () => addRoutesToRoutingModule(tree, context, routes),
       () => addImportsToRoutingModule(routingModulePath, routes),
     ])(tree, context);

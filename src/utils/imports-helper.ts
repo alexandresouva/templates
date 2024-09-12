@@ -17,6 +17,57 @@ import { IImport } from './interfaces';
 import { getSourceFile } from './util';
 
 /**
+ * Adiciona um bloco de HTML ao app.component.html
+ *
+ * @param tree - Árvore de arquivos do projeto.
+ * @param context - Contexto do schematic.
+ * @param content - Conteúdo HTML a ser adicionado.
+ */
+/**
+ * Adiciona um bloco de HTML ao app.component.html se não estiver presente.
+ *
+ * @param content - Conteúdo HTML a ser adicionado.
+ * @returns A regra para ser aplicada no tree do schematic.
+ */
+export function addHTMLBaseToAppComponent(content: string): Rule {
+  return (tree: Tree, context: SchematicContext) => {
+    const filePath = 'src/app/app.component.html';
+
+    if (!tree.exists(filePath)) {
+      context.logger.error(`O arquivo ${filePath} não existe.`);
+      return tree;
+    }
+
+    const fileContent = tree.read(filePath);
+    if (fileContent === null) {
+      context.logger.error(`Não foi possível ler o arquivo ${filePath}.`);
+      return tree;
+    }
+
+    const contentString = fileContent.toString();
+
+    // Verifica se o conteúdo já está presente
+    if (contentString.includes(content)) {
+      // Exemplo de como exibir uma mensagem no console
+      // context.logger.info(`O conteúdo já está presente no ${filePath}.`);
+      return tree;
+    }
+
+    const recorder = tree.beginUpdate(filePath);
+    const contentToAdd = `\n<!-- Adicionando conteúdo via schematic -->\n${content}\n`;
+
+    // Adiciona o conteúdo ao final do arquivo
+    const position = contentString.length;
+    recorder.insertLeft(position, contentToAdd);
+
+    tree.commitUpdate(recorder);
+    context.logger.info(`Conteúdo adicionado ao ${filePath}`);
+
+    return tree;
+  };
+}
+
+/**
  * Adiciona importações do template para o `app.module.ts` do projeto.
  *
  * @param appModulePathInTemplate - Caminho para o arquivo `app.module.ts` do template.
