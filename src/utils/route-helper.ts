@@ -45,25 +45,34 @@ export function addRoutesToRoutingModule(
 
   const recorder = tree.beginUpdate(modulePath);
 
+  // Obtém todas as rotas existentes
+  const existingRoutes =
+    sourceFile.getFullText().match(/path: '([^']*)', component: (\w+)/g) || [];
+
   routesToBeAdded.forEach(({ path, component }, index) => {
-    const isLastRoute = index === routesToBeAdded.length - 1;
-
-    const routeLiteral = isLastRoute
-      ? `{ path: '${path}', component: ${component} } \n`
-      : `{ path: '${path}', component: ${component} },`;
-    const routeChange = addRouteDeclarationToModule(
-      sourceFile,
-      modulePath,
-      `\n ${routeLiteral}`
+    const routeExists = existingRoutes.some((route) =>
+      route.includes(`path: '${path}'`)
     );
 
-    if (routeChange instanceof InsertChange) {
-      recorder.insertLeft(routeChange.pos, routeChange.toAdd);
+    if (!routeExists) {
+      const isLastRoute = index === routesToBeAdded.length - 1;
+      const routeLiteral = isLastRoute
+        ? `{ path: '${path}', component: ${component} } \n`
+        : `{ path: '${path}', component: ${component} },`;
+      const routeChange = addRouteDeclarationToModule(
+        sourceFile,
+        modulePath,
+        `\n ${routeLiteral}`
+      );
+
+      if (routeChange instanceof InsertChange) {
+        recorder.insertLeft(routeChange.pos, routeChange.toAdd);
+      }
+
+      context.logger.info(
+        `Rota ${path} -> ${component} adicionada em ${modulePath}`
+      );
     }
-
-    context.logger.info(
-      `Rota ${path} -> ${component} adicionada em ${modulePath}`
-    );
   });
 
   tree.commitUpdate(recorder);
@@ -120,10 +129,18 @@ function getImportChanges(
   importsToProcess.forEach(({ classifiedName, importPath }) => {
     const importStatement = `import { ${classifiedName} } from '${importPath}';\n`;
 
-    // Encontrar a posição de inserção do import statement
-    const importIndex = findImportInsertionIndex(sourceFile);
+    // Verifica se o import já existe
+    const existingImport = sourceFile.statements.find(
+      (statement) =>
+        ts.isImportDeclaration(statement) &&
+        statement.getText().includes(`from '${importPath}'`)
+    );
 
-    changes.push(new InsertChange(modulePath, importIndex, importStatement));
+    if (!existingImport) {
+      // Encontrar a posição de inserção do import statement
+      const importIndex = findImportInsertionIndex(sourceFile);
+      changes.push(new InsertChange(modulePath, importIndex, importStatement));
+    }
   });
 
   return changes;
