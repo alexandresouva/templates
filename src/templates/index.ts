@@ -7,12 +7,35 @@ import {
 } from '@angular-devkit/schematics';
 import { buildComponent } from '@angular/cdk/schematics';
 import { addImportsToAppModule } from '../utils/template-helper';
-import path = require('path');
-import { IOptions } from '../utils/interfaces';
 
+import path = require('path');
+import { IOptions, RouteConfig } from '../utils/interfaces';
+import {
+  addImportsToRoutingModule,
+  addRoutesToRoutingModule,
+} from '../utils/route-helper';
+
+const routes: RouteConfig[] = [
+  {
+    path: 'home',
+    component: 'HomeComponent',
+    importPath: './home/home.component',
+  },
+  {
+    path: 'about',
+    component: 'AboutComponent',
+    importPath: './about/about.component',
+  },
+  {
+    path: 'contact',
+    component: 'ContactComponent',
+    importPath: './contact/contact.component',
+  },
+];
 export function templates(options: IOptions): Rule {
   return (tree: Tree, context: SchematicContext) => {
     const appModulePath = path.join(__dirname, 'app.module.ts.template');
+    const routingModulePath = 'src/app/app-routing.module.ts';
 
     const { name: sigla } = options;
     if (sigla.length !== 3) {
@@ -22,6 +45,8 @@ export function templates(options: IOptions): Rule {
     return chain([
       buildComponent({ ...options, skipImport: true }),
       addImportsToAppModule(appModulePath),
+      () => addRoutesToRoutingModule(tree, context, routes),
+      () => addImportsToRoutingModule(routingModulePath, routes),
     ])(tree, context);
   };
 }
