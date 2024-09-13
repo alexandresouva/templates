@@ -34,16 +34,14 @@ export function addHTMLToAppComponent(content: string): Rule {
     const fileContent = tree.read(filePath);
     if (fileContent === null) {
       throw new SchematicsException(
-        `Não foi possível ler o arquivo ${filePath}.`
+        `Ocorreu um erro ao ler o arquivo ${filePath}.`
       );
     }
 
     const contentString = fileContent.toString();
 
-    // Verifica se o conteúdo já está presente
+    // Interrompe o fluxo se o conteúdo HTML já estiver no arquivo
     if (contentString.includes(content)) {
-      // Exemplo de como exibir uma mensagem no console
-      // context.logger.info(`O conteúdo já está presente no ${filePath}.`);
       return tree;
     }
 
@@ -70,7 +68,7 @@ export function addImportsToAppModule(appModuleImports: string): Rule {
   return (tree: Tree, _context: SchematicContext) => {
     if (!tree.exists(targetAppModulePath)) {
       throw new SchematicsException(
-        `O arquivo app.module.ts não existe em ${targetAppModulePath}`
+        `Não foi possível adicionar as importações. O arquivo "app.module.ts" não existe em ${targetAppModulePath}`
       );
     }
 
