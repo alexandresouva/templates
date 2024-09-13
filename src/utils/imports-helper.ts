@@ -22,18 +22,20 @@ import { getSourceFile } from './util';
  * @returns A regra para ser aplicada no tree do schematic.
  */
 export function addHTMLToAppComponent(content: string): Rule {
-  return (tree: Tree, context: SchematicContext) => {
+  return (tree: Tree) => {
     const filePath = 'src/app/app.component.html';
 
     if (!tree.exists(filePath)) {
-      context.logger.error(`O arquivo ${filePath} não existe.`);
-      return tree;
+      throw new SchematicsException(
+        `Não foi possível adicionar o template. O arquivo ${filePath} não existe.`
+      );
     }
 
     const fileContent = tree.read(filePath);
     if (fileContent === null) {
-      context.logger.error(`Não foi possível ler o arquivo ${filePath}.`);
-      return tree;
+      throw new SchematicsException(
+        `Não foi possível ler o arquivo ${filePath}.`
+      );
     }
 
     const contentString = fileContent.toString();
@@ -93,10 +95,10 @@ export function addImportsToAppModule(appModuleImports: string): Rule {
 }
 
 /**
- * Extrai importações da string fornecida.
+ * Extrai importações da string fornecida e remove duplicatas.
  *
  * @param importsString - String que contém os imports.
- * @returns Um array de importações.
+ * @returns Um array de importações únicas.
  */
 function getImportsFromString(importsString: string): IImport[] {
   const sourceFile = ts.createSourceFile(
@@ -106,7 +108,7 @@ function getImportsFromString(importsString: string): IImport[] {
     true
   );
 
-  const imports: IImport[] = [];
+  const importsMap = new Map<string, IImport>();
 
   sourceFile.statements.forEach((node) => {
     if (ts.isImportDeclaration(node)) {
@@ -115,28 +117,32 @@ function getImportsFromString(importsString: string): IImport[] {
         .getText()
         .replace(/['"]/g, '');
 
-      if (importClause) {
-        if (importClause.name) {
-          imports.push({
-            classifiedName: importClause.name.text,
+      // Interrompe o loop se não houver importClause
+      if (!importClause) {
+        return;
+      }
+
+      if (importClause.name) {
+        importsMap.set(moduleSpecifier, {
+          classifiedName: importClause.name.text,
+          importPath: moduleSpecifier,
+        });
+      } else if (
+        importClause.namedBindings &&
+        ts.isNamedImports(importClause.namedBindings)
+      ) {
+        importClause.namedBindings.elements.forEach((element) => {
+          importsMap.set(moduleSpecifier, {
+            classifiedName: element.name.text,
             importPath: moduleSpecifier,
           });
-        } else if (
-          importClause.namedBindings &&
-          ts.isNamedImports(importClause.namedBindings)
-        ) {
-          importClause.namedBindings.elements.forEach((element) => {
-            imports.push({
-              classifiedName: element.name.text,
-              importPath: moduleSpecifier,
-            });
-          });
-        }
+        });
       }
     }
   });
 
-  return imports;
+  // Converte o mapa em um array
+  return Array.from(importsMap.values());
 }
 
 /**
