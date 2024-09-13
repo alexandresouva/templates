@@ -10,10 +10,7 @@ import { addImportsToAppModule } from '../utils/template-helper';
 
 import path = require('path');
 import { IOptions, RouteConfig } from '../utils/interfaces';
-import {
-  addImportsToRoutingModule,
-  addRoutesToRoutingModule,
-} from '../utils/route-helper';
+import { addRoutesAndImportsToRoutingModule } from '../utils/route-helper';
 import { addHTMLBaseToAppComponent } from '../utils/imports-helper';
 
 const routes: RouteConfig[] = [
@@ -47,8 +44,7 @@ export function templates(options: IOptions): Rule {
       buildComponent({ ...options, skipImport: true }),
       addImportsToAppModule(appModulePath),
       addHTMLBaseToAppComponent('<my-component></my-component>'),
-      () => addRoutesToRoutingModule(tree, routes),
-      () => addImportsToRoutingModule(routes),
+      () => addRoutesAndImportsToRoutingModule(routes),
     ])(tree, context);
   };
 }
