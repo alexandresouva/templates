@@ -8,39 +8,14 @@ import {
 import { buildComponent } from '@angular/cdk/schematics';
 import { addImportsToAppModule } from '../utils/template-helper';
 import path = require('path');
-import { IOptions, RouteConfig } from '../utils/interfaces';
+import { IOptions } from '../utils/interfaces';
 import { addRoutesAndImportsToRoutingModule } from '../utils/route-helper';
 import { addHTMLToAppComponent } from '../utils/imports-helper';
-
-// Rotas a serem adicionadas
-const routes: RouteConfig[] = [
-  {
-    path: 'home',
-    component: 'HomeComponent',
-    importPath: './home/home.component',
-  },
-  {
-    path: 'about',
-    component: 'AboutComponent',
-    importPath: './about/about.component',
-  },
-  {
-    path: 'contact',
-    component: 'ContactComponent',
-    importPath: './contact/contact.component',
-  },
-];
-
-// Template HTML a ser adicionado no app.component.html
-const appComponentHTML = `
-<my-header></my-header>
-<main>
-  <router-outlet></router-outlet>
-</main>
-<my-footer></my-footer>
-`;
+import templateData from './template-data';
 
 export function templates(options: IOptions): Rule {
+  const { appComponentHTML, routes } = templateData;
+
   return (tree: Tree, context: SchematicContext) => {
     const appModulePath = path.join(__dirname, 'app.module.ts.template');
 

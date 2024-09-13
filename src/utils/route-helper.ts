@@ -8,7 +8,7 @@ import { addRouteDeclarationToModule } from '@angular/cdk/schematics';
 
 import { Change, InsertChange } from '@schematics/angular/utility/change';
 import ts = require('typescript');
-import { IImport, RouteConfig } from './interfaces';
+import { IImport, IRouteConfig } from './interfaces';
 import { findImportInsertionIndex, getSourceFile } from './util';
 
 /**
@@ -18,7 +18,7 @@ import { findImportInsertionIndex, getSourceFile } from './util';
  * @returns Uma regra do schematic que adiciona as rotas e importações ao módulo de roteamento.
  */
 export function addRoutesAndImportsToRoutingModule(
-  routesToBeAdded: RouteConfig[]
+  routesToBeAdded: IRouteConfig[]
 ): Rule {
   return (tree: Tree, _context: SchematicContext) => {
     const routingModulePath = 'src/app/app-routing.module.ts';

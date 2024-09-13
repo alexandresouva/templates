@@ -16,13 +16,11 @@ import * as fs from 'fs';
 import { IImport } from './interfaces';
 import { getSourceFile } from './util';
 
-/**
- * Adiciona um bloco de HTML ao app.component.html
- *
- * @param tree - Árvore de arquivos do projeto.
- * @param context - Contexto do schematic.
- * @param content - Conteúdo HTML a ser adicionado.
- */
+// Módulos singleton que precisam ter o import "forRoot()"
+// const MODULES_REQUIRING_FOR_ROOT = [
+//   'bbButtonModule',
+// ];
+
 /**
  * Adiciona um bloco de HTML ao app.component.html caso o mesmo não esteja presente.
  *
