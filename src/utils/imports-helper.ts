@@ -24,7 +24,7 @@ import { getSourceFile } from './util';
  * @param content - Conteúdo HTML a ser adicionado.
  */
 /**
- * Adiciona um bloco de HTML ao app.component.html se não estiver presente.
+ * Adiciona um bloco de HTML ao app.component.html caso o mesmo não esteja presente.
  *
  * @param content - Conteúdo HTML a ser adicionado.
  * @returns A regra para ser aplicada no tree do schematic.
@@ -54,7 +54,7 @@ export function addHTMLToAppComponent(content: string): Rule {
     }
 
     const recorder = tree.beginUpdate(filePath);
-    const contentToAdd = `\n\n<!-- Conteúdo adicionado via templates -->\n${content}\n`;
+    const contentToAdd = `\n<!-- Conteúdo adicionado via templates -->${content}\n`;
 
     // Adiciona o conteúdo ao final do arquivo
     const position = contentString.length;

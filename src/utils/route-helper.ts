@@ -78,11 +78,23 @@ export function addRoutesAndImportsToRoutingModule(
       }
     });
 
+    // Filtra e remove as rotas duplicadas
+    const importsToAdd = routesToBeAdded
+      .map((route) => ({
+        classifiedName: route.component,
+        importPath: route.importPath,
+      }))
+      .filter(
+        (value, index, self) =>
+          index ===
+          self.findIndex(
+            (t) =>
+              t.classifiedName === value.classifiedName &&
+              t.importPath === value.importPath
+          )
+      );
+
     // Prepara os imports e as mudanças a serem adicionadas
-    const importsToAdd = routesToBeAdded.map((route) => ({
-      classifiedName: route.component,
-      importPath: route.importPath,
-    }));
     const importChanges = getImportChanges(
       sourceFile,
       routingModulePath,
