@@ -7,12 +7,12 @@ import {
 } from '@angular-devkit/schematics';
 import { buildComponent } from '@angular/cdk/schematics';
 import { addImportsToAppModule } from '../utils/template-helper';
-
 import path = require('path');
 import { IOptions, RouteConfig } from '../utils/interfaces';
 import { addRoutesAndImportsToRoutingModule } from '../utils/route-helper';
-import { addHTMLBaseToAppComponent } from '../utils/imports-helper';
+import { addHTMLToAppComponent } from '../utils/imports-helper';
 
+// Rotas a serem adicionadas
 const routes: RouteConfig[] = [
   {
     path: 'home',
@@ -31,6 +31,15 @@ const routes: RouteConfig[] = [
   },
 ];
 
+// Template HTML a ser adicionado no app.component.html
+const appComponentHTML = `
+<my-header></my-header>
+<main>
+  <router-outlet></router-outlet>
+</main>
+<my-footer></my-footer>
+`;
+
 export function templates(options: IOptions): Rule {
   return (tree: Tree, context: SchematicContext) => {
     const appModulePath = path.join(__dirname, 'app.module.ts.template');
@@ -43,7 +52,7 @@ export function templates(options: IOptions): Rule {
     return chain([
       buildComponent({ ...options, skipImport: true }),
       addImportsToAppModule(appModulePath),
-      addHTMLBaseToAppComponent('<my-component></my-component>'),
+      addHTMLToAppComponent(appComponentHTML),
       () => addRoutesAndImportsToRoutingModule(routes),
     ])(tree, context);
   };

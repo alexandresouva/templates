@@ -29,7 +29,7 @@ import { getSourceFile } from './util';
  * @param content - Conteúdo HTML a ser adicionado.
  * @returns A regra para ser aplicada no tree do schematic.
  */
-export function addHTMLBaseToAppComponent(content: string): Rule {
+export function addHTMLToAppComponent(content: string): Rule {
   return (tree: Tree, context: SchematicContext) => {
     const filePath = 'src/app/app.component.html';
 
@@ -54,15 +54,13 @@ export function addHTMLBaseToAppComponent(content: string): Rule {
     }
 
     const recorder = tree.beginUpdate(filePath);
-    const contentToAdd = `\n<!-- Adicionando conteúdo via schematic -->\n${content}\n`;
+    const contentToAdd = `\n\n<!-- Conteúdo adicionado via templates -->\n${content}\n`;
 
     // Adiciona o conteúdo ao final do arquivo
     const position = contentString.length;
     recorder.insertLeft(position, contentToAdd);
 
     tree.commitUpdate(recorder);
-    context.logger.info(`Conteúdo adicionado ao ${filePath}`);
-
     return tree;
   };
 }
