@@ -12,14 +12,8 @@ import {
 
 import { Change, InsertChange } from '@schematics/angular/utility/change';
 import ts = require('typescript');
-import * as fs from 'fs';
 import { IImport } from './interfaces';
 import { getSourceFile } from './util';
-
-// Módulos singleton que precisam ter o import "forRoot()"
-// const MODULES_REQUIRING_FOR_ROOT = [
-//   'bbButtonModule',
-// ];
 
 /**
  * Adiciona um bloco de HTML ao app.component.html caso o mesmo não esteja presente.
@@ -64,30 +58,29 @@ export function addHTMLToAppComponent(content: string): Rule {
 }
 
 /**
- * Adiciona importações do template para o `app.module.ts` do projeto.
+ * Adiciona importações ao `app.module.ts` do projeto diretamente de uma string.
  *
- * @param appModulePathInTemplate - Caminho para o arquivo `app.module.ts` do template.
  * @returns Rule que aplica as mudanças no arquivo `app.module.ts` do projeto.
  */
-export function addImportsToAppModule(appModulePathInTemplate: string): Rule {
+export function addImportsToAppModule(appModuleImports: string): Rule {
   const targetAppModulePath = 'src/app/app.module.ts';
 
   return (tree: Tree, _context: SchematicContext) => {
-    // Caso o arquivo app.module.ts no projeto de destino não exista, lança um erro
     if (!tree.exists(targetAppModulePath)) {
       throw new SchematicsException(
-        `Não foi possível adicionar as importações. O arquivo app.module não existe em ${targetAppModulePath}`
+        `O arquivo app.module.ts não existe em ${targetAppModulePath}`
       );
     }
 
-    // Lista de imports que serão adicionados no app.module.ts (destino)
+    const sourceFile = getSourceFile(targetAppModulePath, tree);
+    const importsToProcess = getImportsFromString(appModuleImports);
+
     const missingImports = getMissingImports(
-      getSourceFile(targetAppModulePath, tree),
+      sourceFile,
       targetAppModulePath,
-      getImportsFromAppModuleInTemplate(appModulePathInTemplate)
+      importsToProcess
     );
 
-    // Aplica as mudanças no app.module.ts do arquivo de destino
     const recorder = tree.beginUpdate(targetAppModulePath);
     missingImports.forEach((importItem) => {
       if (importItem instanceof InsertChange) {
@@ -100,55 +93,50 @@ export function addImportsToAppModule(appModulePathInTemplate: string): Rule {
 }
 
 /**
- * Obtém a lista de importações do arquivo de template do módulo.
+ * Extrai importações da string fornecida.
  *
- * @param appModulePath - Caminho para o arquivo de template do módulo.
- * @returns Um array de importações extraídas do arquivo de template.
- * @throws SchematicsException se o arquivo de template não puder ser lido.
+ * @param importsString - String que contém os imports.
+ * @returns Um array de importações.
  */
-function getImportsFromAppModuleInTemplate(appModulePath: string): IImport[] {
-  if (fs.existsSync(appModulePath)) {
-    const templateAppModuleSource = getSourceFile(appModulePath);
-    const imports: IImport[] = [];
+function getImportsFromString(importsString: string): IImport[] {
+  const sourceFile = ts.createSourceFile(
+    'appModuleImports.ts',
+    importsString,
+    ts.ScriptTarget.Latest,
+    true
+  );
 
-    templateAppModuleSource.statements.forEach((node) => {
-      // Verifica se a declaração atual é uma declaração de importação
-      if (ts.isImportDeclaration(node)) {
-        const importClause = node.importClause; // Obtém a cláusula de importação (o que está sendo importado)
-        const moduleSpecifier = node.moduleSpecifier
-          .getText()
-          .replace(/['"]/g, ''); // Obtém o caminho do módulo importado
+  const imports: IImport[] = [];
 
-        if (importClause) {
-          if (importClause.name) {
-            // Se a importação for do tipo default (ex: import x from 'module')
+  sourceFile.statements.forEach((node) => {
+    if (ts.isImportDeclaration(node)) {
+      const importClause = node.importClause;
+      const moduleSpecifier = node.moduleSpecifier
+        .getText()
+        .replace(/['"]/g, '');
+
+      if (importClause) {
+        if (importClause.name) {
+          imports.push({
+            classifiedName: importClause.name.text,
+            importPath: moduleSpecifier,
+          });
+        } else if (
+          importClause.namedBindings &&
+          ts.isNamedImports(importClause.namedBindings)
+        ) {
+          importClause.namedBindings.elements.forEach((element) => {
             imports.push({
-              classifiedName: importClause.name.text,
+              classifiedName: element.name.text,
               importPath: moduleSpecifier,
             });
-          } else if (
-            // Se a importação for do tipo nomeada (ex: import { x, y } from 'module')
-            importClause.namedBindings &&
-            ts.isNamedImports(importClause.namedBindings)
-          ) {
-            importClause.namedBindings.elements.forEach((element) => {
-              // Adiciona cada elemento importado ao array de imports
-              imports.push({
-                classifiedName: element.name.text,
-                importPath: moduleSpecifier,
-              });
-            });
-          }
+          });
         }
       }
-    });
+    }
+  });
 
-    return imports;
-  } else {
-    throw new SchematicsException(
-      `Não foi possível ler o arquivo app.module em ${appModulePath}.`
-    );
-  }
+  return imports;
 }
 
 /**
@@ -180,26 +168,25 @@ function getMissingImports(
     Guard: addProviderToModule,
     Interceptor: addProviderToModule,
     Resolver: addProviderToModule,
-    Module: addImportToModule,
+    Module: (sourceFile, modulePath, classifiedName, importPath) => {
+      const MODULES_REQUIRING_FOR_ROOT = ['My2Module'];
+
+      // Verifica se o módulo precisa do forRoot()
+      const moduleName = MODULES_REQUIRING_FOR_ROOT.includes(classifiedName)
+        ? `${classifiedName}.forRoot()`
+        : classifiedName;
+      return addImportToModule(sourceFile, modulePath, moduleName, importPath);
+    },
   };
 
-  return (
-    importsToProcess
-      // Filtra para excluir o NgModule das declarações
-      .filter(({ classifiedName }) => classifiedName !== 'NgModule')
-      // Processa cada importação usando o handler apropriado
-      .flatMap(({ classifiedName, importPath }) => {
-        const handler = Object.keys(handlers).find((key) =>
-          classifiedName.endsWith(key)
-        );
-        return handler
-          ? handlers[handler](
-              sourceFile,
-              modulePath,
-              classifiedName,
-              importPath
-            )
-          : [];
-      })
-  );
+  return importsToProcess
+    .filter(({ classifiedName }) => classifiedName !== 'NgModule')
+    .flatMap(({ classifiedName, importPath }) => {
+      const handler = Object.keys(handlers).find((key) =>
+        classifiedName.endsWith(key)
+      );
+      return handler
+        ? handlers[handler](sourceFile, modulePath, classifiedName, importPath)
+        : [];
+    });
 }

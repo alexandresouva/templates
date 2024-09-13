@@ -16,6 +16,6 @@ export interface IRouteConfig {
 
 export interface ITemplateData {
   appComponentHTML: string;
-  appModuleImports: IImport[];
+  appModuleImports: string;
   routes: IRouteConfig[];
 }

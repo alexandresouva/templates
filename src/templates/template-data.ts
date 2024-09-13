@@ -1,25 +1,17 @@
-import { IImport, IRouteConfig, ITemplateData } from '../utils/interfaces';
+import { IRouteConfig, ITemplateData } from '../utils/interfaces';
 
 // Imports a serem adicionados no app.module.ts
-const appModuleImports: IImport[] = [
-  {
-    classifiedName: 'NgModule',
-    importPath: '@angular/core',
-  },
-  {
-    classifiedName: 'MyModule',
-    importPath: '@angular/core',
-    isModuleForRoot: true,
-  },
-];
-
-// const imports = `
-// import { NgModule } from '@angular/core';
-// import { BrowserModule } from '@angular/platform-browser';
-// import { AppRoutingModule } from './app-routing.module';
-// import { AppComponent } from './app.component';
-// import { MyComponent } from './components/my-component.component';
-// `;
+const appModuleImports = `
+import { NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+import { AppRoutingModule } from './app-routing.module';
+import { AppComponent } from './app.component';
+import { MyComponent } from './components/my-component.component';
+import { MyComponent2 } from './components/my-component.component2';
+import { MyModule } from './compnents/my/my.module';
+import { My2Module } from './compnents/my/my.module';
+import { My2Module } from './compnents/my/my.module';
+`;
 
 // Template HTML a ser adicionado no app.component.html
 const appComponentHTML = `
