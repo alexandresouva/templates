@@ -20,7 +20,9 @@ export function templates(options: IOptions): Rule {
   return (tree: Tree, context: SchematicContext) => {
     const { name: sigla } = options;
     if (sigla.length !== 3) {
-      throw new SchematicsException('A sigla deve ter exatamente 3 letras.');
+      throw new SchematicsException(
+        'A sigla informada deve ter exatamente 3 letras.'
+      );
     }
 
     return chain([

@@ -26,14 +26,14 @@ export function addRoutesAndImportsToRoutingModule(
     // Lança um erro caso o arquivo de módulo de roteamento não exista
     if (!tree.exists(routingModulePath)) {
       throw new SchematicsException(
-        `Não foi possível adicionar as rotas do projeto. O arquivo "${routingModulePath}" não foi encontrado.`
+        `Não foi possível adicionar as rotas no projeto. O arquivo "${routingModulePath}" não foi encontrado.`
       );
     }
 
     // Obtém o SourceFile (representação do arquivo) do módulo de roteamento
     const sourceFile = getSourceFile(routingModulePath, tree);
 
-    // Obtem o texto completo do arquivo app-routing.module.ts
+    // Obtém o texto completo do arquivo app-routing.module.ts
     const appRoutingText = sourceFile.getFullText();
 
     // Encontra o início e fim do array de rotas
@@ -43,11 +43,8 @@ export function addRoutesAndImportsToRoutingModule(
     const routesArrayEnd = appRoutingText.indexOf(']', routesArrayStart);
 
     // Extrai as rotas existentes
-    const existingRoutesText = appRoutingText.substring(
-      routesArrayStart,
-      routesArrayEnd
-    );
-    const existingRoutes = existingRoutesText
+    const existingRoutes = appRoutingText
+      .substring(routesArrayStart, routesArrayEnd)
       .split(',')
       .map((route) => route.trim())
       .filter((route) => route.length > 0);
@@ -58,8 +55,11 @@ export function addRoutesAndImportsToRoutingModule(
 
     // Adiciona as rotas ao início do array de roteamento
     routesToBeAdded.forEach(({ path, component }, index) => {
-      const isRouteAlreadyPresent = existingRoutes.some((route) =>
-        route.includes(`path: '${path}'`)
+      const isRouteAlreadyPresent = existingRoutes.some(
+        (route, i) =>
+          route.includes(`path: '${path}'`) &&
+          existingRoutes[i + 1] &&
+          existingRoutes[i + 1].includes(`component: ${component}`)
       );
       const isLastRoute = index === routesToBeAdded.length - 1;
 
@@ -87,8 +87,7 @@ export function addRoutesAndImportsToRoutingModule(
           route
         );
         if (routeChange instanceof InsertChange) {
-          const newRota = `${routeChange.toAdd.replace(',', '')},`;
-          recorder.insertLeft(routesArrayStart, newRota);
+          recorder.insertLeft(routesArrayStart, routeChange.toAdd);
         }
       }
     });

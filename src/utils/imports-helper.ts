@@ -27,14 +27,14 @@ export function addHTMLToAppComponent(content: string): Rule {
 
     if (!tree.exists(filePath)) {
       throw new SchematicsException(
-        `Não foi possível adicionar o template. O arquivo ${filePath} não existe.`
+        `Não foi possível gerar o template. O arquivo ${filePath} não existe.`
       );
     }
 
     const fileContent = tree.read(filePath);
     if (fileContent === null) {
       throw new SchematicsException(
-        `Ocorreu um erro ao ler o arquivo ${filePath}.`
+        `Não foi possível gerar o template. Ocorreu um erro ao ler o arquivo ${filePath}.`
       );
     }
 
