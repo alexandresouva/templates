@@ -12,7 +12,7 @@ import {
 
 import { Change, InsertChange } from '@schematics/angular/utility/change';
 import ts = require('typescript');
-import { IImport } from './interfaces';
+import { IGenericImport } from './interfaces';
 import { getSourceFile } from './util';
 
 /**
@@ -58,11 +58,14 @@ export function addHTMLToAppComponent(content: string): Rule {
 }
 
 /**
- * Adiciona importações ao `app.module.ts` do projeto diretamente de uma string.
+ * Adiciona importações ao app.module.ts a partir de um array de IImport.
  *
- * @returns Rule que aplica as mudanças no arquivo `app.module.ts` do projeto.
+ * @param appModuleImports - Array de objetos IImport com as informações de importação.
+ * @returns Rule que aplica as mudanças no arquivo app.module.ts do projeto.
  */
-export function addImportsToAppModule(appModuleImports: string): Rule {
+export function addImportsToAppModule(
+  appModuleImports: IGenericImport[]
+): Rule {
   const targetAppModulePath = 'src/app/app.module.ts';
 
   return (tree: Tree, _context: SchematicContext) => {
@@ -73,12 +76,12 @@ export function addImportsToAppModule(appModuleImports: string): Rule {
     }
 
     const sourceFile = getSourceFile(targetAppModulePath, tree);
-    const importsToProcess = getImportsFromString(appModuleImports);
 
+    // Obtem os imports que faltam no app.module.ts
     const missingImports = getMissingImports(
       sourceFile,
       targetAppModulePath,
-      importsToProcess
+      appModuleImports
     );
 
     const recorder = tree.beginUpdate(targetAppModulePath);
@@ -92,71 +95,12 @@ export function addImportsToAppModule(appModuleImports: string): Rule {
   };
 }
 
-/**
- * Extrai importações da string fornecida e remove duplicatas.
- *
- * @param importsString - String que contém os imports.
- * @returns Um array de importações únicas.
- */
-function getImportsFromString(importsString: string): IImport[] {
-  const sourceFile = ts.createSourceFile(
-    'appModuleImports.ts',
-    importsString,
-    ts.ScriptTarget.Latest,
-    true
-  );
-
-  const importsMap = new Map<string, IImport>();
-
-  sourceFile.statements.forEach((node) => {
-    if (ts.isImportDeclaration(node)) {
-      const importClause = node.importClause;
-      const moduleSpecifier = node.moduleSpecifier
-        .getText()
-        .replace(/['"]/g, '');
-
-      // Interrompe o loop se não houver importClause
-      if (!importClause) {
-        return;
-      }
-
-      if (importClause.name) {
-        importsMap.set(moduleSpecifier, {
-          classifiedName: importClause.name.text,
-          importPath: moduleSpecifier,
-        });
-      } else if (
-        importClause.namedBindings &&
-        ts.isNamedImports(importClause.namedBindings)
-      ) {
-        importClause.namedBindings.elements.forEach((element) => {
-          importsMap.set(moduleSpecifier, {
-            classifiedName: element.name.text,
-            importPath: moduleSpecifier,
-          });
-        });
-      }
-    }
-  });
-
-  // Converte o mapa em um array
-  return Array.from(importsMap.values());
-}
-
-/**
- * Obtém as mudanças necessárias para adicionar importações ao `app.module.ts`.
- *
- * @param sourceFile - O SourceFile do `app.module.ts` do projeto de destino.
- * @param modulePath - Caminho para o `app.module.ts`.
- * @param importsToProcess - Lista de importações extraídas do arquivo de template.
- * @returns Um array de mudanças necessárias para adicionar as importações.
- */
 function getMissingImports(
   sourceFile: ts.SourceFile,
   modulePath: string,
-  importsToProcess: IImport[]
+  importsToProcess: IGenericImport[]
 ): Change[] {
-  // Mapeia os tipos de arquivos para suas respectivas funções de manipulação
+  // Mapeia os tipos de arquivos para suas respectivas funções de tratamento
   const handlers: {
     [key: string]: (
       sourceFile: ts.SourceFile,

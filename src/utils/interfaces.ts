@@ -2,13 +2,13 @@ import { Schema } from '@schematics/angular/component/schema';
 
 export interface IOptions extends Schema {}
 
-export interface IImport {
+export interface IGenericImport {
   classifiedName: string;
   importPath: string;
   isModuleForRoot?: boolean;
 }
 
-export interface IRouteConfig {
+export interface IRouteImport {
   path: string;
   component: string;
   importPath: string;
@@ -16,6 +16,6 @@ export interface IRouteConfig {
 
 export interface ITemplateData {
   appComponentHTML: string;
-  appModuleImports: string;
-  routes: IRouteConfig[];
+  appModuleImports: IGenericImport[];
+  routes: IRouteImport[];
 }

@@ -1,17 +1,80 @@
-import { IRouteConfig, ITemplateData } from '../utils/interfaces';
+import {
+  IGenericImport,
+  IRouteImport,
+  ITemplateData,
+} from '../utils/interfaces';
 
-// Imports a serem adicionados no app.module.ts
-const appModuleImports = `
-import { NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
-import { AppRoutingModule } from './app-routing.module';
-import { AppComponent } from './app.component';
-import { MyComponent } from './components/my-component.component';
-import { MyComponent2 } from './components/my-component.component2';
-import { MyModule } from './compnents/my/my.module';
-import { My2Module } from './compnents/my/my.module';
-import { My2Module } from './compnents/my/my.module';
-`;
+const appModuleImports: IGenericImport[] = [
+  // Componentes
+  {
+    classifiedName: 'MyComponent',
+    importPath: './components/my-component.component',
+  },
+  {
+    classifiedName: 'My2Component',
+    importPath: './components/my-component2.component',
+  },
+  {
+    classifiedName: 'HeaderComponent',
+    importPath: './components/header/header.component',
+  },
+
+  // Módulos
+  { classifiedName: 'MyModule', importPath: './components/my/my.module' },
+  {
+    classifiedName: 'My2Module',
+    importPath: './components/my2/my2.module',
+    isModuleForRoot: true,
+  },
+
+  // Pipes
+  {
+    classifiedName: 'CustomPipe',
+    importPath: './pipes/custom.pipe',
+  },
+  {
+    classifiedName: 'DateFormatPipe',
+    importPath: './pipes/date-format.pipe',
+  },
+
+  // Diretivas
+  {
+    classifiedName: 'HighlightDirective',
+    importPath: './directives/highlight.directive',
+  },
+  {
+    classifiedName: 'VisibilityDirective',
+    importPath: './directives/visibility.directive',
+  },
+
+  // Serviços
+  {
+    classifiedName: 'AuthService',
+    importPath: './services/auth.service',
+  },
+  {
+    classifiedName: 'LoggingService',
+    importPath: './services/logging.service',
+  },
+
+  // Guards
+  {
+    classifiedName: 'AuthGuard',
+    importPath: './guards/auth.guard',
+  },
+
+  // Interceptors
+  {
+    classifiedName: 'AuthInterceptor',
+    importPath: './interceptors/auth.interceptor',
+  },
+
+  // Resolvers
+  {
+    classifiedName: 'UserResolver',
+    importPath: './resolvers/user.resolver',
+  },
+];
 
 // Template HTML a ser adicionado no app.component.html
 const appComponentHTML = `
@@ -23,7 +86,7 @@ const appComponentHTML = `
 `;
 
 // Rotas a serem adicionadas no app-routing.module
-const routes: IRouteConfig[] = [
+const routes: IRouteImport[] = [
   {
     path: 'home',
     component: 'HomeComponent',
@@ -43,7 +106,7 @@ const routes: IRouteConfig[] = [
 
 const templateData: ITemplateData = {
   appComponentHTML,
-  appModuleImports,
+  appModuleImports: appModuleImports,
   routes,
 };
 
