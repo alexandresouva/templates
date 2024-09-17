@@ -1,1 +1,13 @@
-<p>Hello world!</p>
+<% if (paginationType === 'paginação') { %>
+<div class="pagination">
+  <p>Você escolheu Paginação.</p>
+</div>
+<% } else if (paginationType === 'scroll infinito') { %>
+<div class="infinite-scroll">
+  <!-- Código para a exibição com scroll infinito -->
+  <p>Você escolheu Scroll Infinito.</p>
+  <!-- Adicione seu código de scroll infinito aqui -->
+</div>
+<% } else { %>
+<p>Tipo de exibição desconhecido.</p>
+<% } %>

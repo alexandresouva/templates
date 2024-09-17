@@ -1,0 +1,11 @@
+<% if (paginationType === 'paginacao') { %>
+
+### Olá, um item foi paginado.
+
+<% } %>
+
+<% if (paginationType === 'scroll-infinito') { %>
+
+### Olá, este item tem scroll.
+
+<% } %>
