@@ -16,6 +16,11 @@ import { IGenericImport } from './interfaces';
 import { getSourceFile } from './util';
 
 /**
+ * Imports essenciais que serão usados em todos os templates.
+ */
+export const ESSENTIALS_IMPORTS: IGenericImport[] = [];
+
+/**
  * Adiciona um bloco de HTML ao app.component.html caso o mesmo não esteja presente.
  *
  * @param content - Conteúdo HTML a ser adicionado.

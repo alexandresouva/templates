@@ -1,83 +1,39 @@
-import {
-  IGenericImport,
-  IRouteImport,
-  ITemplateData,
-} from '../utils/interfaces';
+import { IGenericImport, IRouteImport } from '../utils/interfaces';
+import { SchemaProps } from './schema';
 
-const appModuleImports: IGenericImport[] = [
-  // Componentes
-  {
-    classifiedName: 'MyComponent',
-    importPath: './components/my-component.component',
-  },
-  {
-    classifiedName: 'My2Component',
-    importPath: './components/my-component2.component',
-  },
-  {
-    classifiedName: 'HeaderComponent',
-    importPath: './components/header/header.component',
-  },
+/**
+ * Mapeia todas as variações possíveis do template.
+ */
+export type TemplateVariations = SchemaProps[keyof SchemaProps];
 
-  // Módulos
-  { classifiedName: 'MyModule', importPath: './components/my/my.module' },
+/**
+ * Imports necessários para a variação de template escolhida. Utilize como chave as possíveis escolhas para o template (variações) e como valor os imports que devem ser adicionados.
+ */
+export const conditionalImports: Record<TemplateVariations, IGenericImport[]> =
   {
-    classifiedName: 'My2Module',
-    importPath: './components/my2/my2.module',
-    isModuleForRoot: true,
-  },
+    paginacao: [
+      {
+        classifiedName: 'MyComponent',
+        importPath: './components/my-component.component',
+      },
+      {
+        classifiedName: 'My2Component',
+        importPath: './components/my-component2.component',
+      },
+    ],
+    'scroll-infinito': [
+      {
+        classifiedName: 'HeaderComponent',
+        importPath: './components/header/header.component',
+      },
+      { classifiedName: 'MyModule', importPath: './components/my/my.module' },
+    ],
+  };
 
-  // Pipes
-  {
-    classifiedName: 'CustomPipe',
-    importPath: './pipes/custom.pipe',
-  },
-  {
-    classifiedName: 'DateFormatPipe',
-    importPath: './pipes/date-format.pipe',
-  },
-
-  // Diretivas
-  {
-    classifiedName: 'HighlightDirective',
-    importPath: './directives/highlight.directive',
-  },
-  {
-    classifiedName: 'VisibilityDirective',
-    importPath: './directives/visibility.directive',
-  },
-
-  // Serviços
-  {
-    classifiedName: 'AuthService',
-    importPath: './services/auth.service',
-  },
-  {
-    classifiedName: 'LoggingService',
-    importPath: './services/logging.service',
-  },
-
-  // Guards
-  {
-    classifiedName: 'AuthGuard',
-    importPath: './guards/auth.guard',
-  },
-
-  // Interceptors
-  {
-    classifiedName: 'AuthInterceptor',
-    importPath: './interceptors/auth.interceptor',
-  },
-
-  // Resolvers
-  {
-    classifiedName: 'UserResolver',
-    importPath: './resolvers/user.resolver',
-  },
-];
-
-// Template HTML a ser adicionado no app.component.html
-const appComponentHTML = `
+/**
+ * Template HTML a ser adicionado no app.component.html
+ */
+export const appComponentHTML = `
 <my-header></my-header>
 <main>
   <router-outlet></router-outlet>
@@ -85,8 +41,10 @@ const appComponentHTML = `
 <my-footer></my-footer>
 `;
 
-// Rotas a serem adicionadas no app-routing.module
-const routes: IRouteImport[] = [
+/**
+ * Rotas a serem adicionadas no app-routing.module
+ */
+export const routes: IRouteImport[] = [
   {
     path: 'home',
     component: 'HomeComponent',
@@ -103,11 +61,3 @@ const routes: IRouteImport[] = [
     importPath: './contact/contact.component',
   },
 ];
-
-const templateData: ITemplateData = {
-  appComponentHTML,
-  appModuleImports: appModuleImports,
-  routes,
-};
-
-export default templateData;

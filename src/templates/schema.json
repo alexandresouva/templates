@@ -13,13 +13,28 @@
     },
     "name": {
       "type": "string",
-      "description": "Sigla da equipe. O nome da propriedade 'name' não pode ser alterado no JSON.",
+      "description": "Sigla da equipe. O nome da propriedade 'name' não deve ser alterado no JSON por questões de compatibilidade com a lib do Angular CDK.",
       "$default": {
         "$source": "argv",
         "index": 0
       },
-      "x-prompt": "Qual a sigla da equipe? Ex: gaw"
+      "x-prompt": "Qual a sigla da equipe responsável pelo projeto? Ex: gaw"
     },
+    "paginationType": {
+      "type": "string",
+      "default": "paginacao",
+      "description": "Escolha o tipo de exibição dos dados da tabela.",
+      "x-prompt": {
+        "message": "De que maneira os dados principais devem ser exibidos?",
+        "type": "list",
+        "items": [ 
+          {"value": "paginacao", "label": "Paginação"},
+          {"value": "scroll-infinito", "label": "Scroll Infinito"}
+        ]
+      }
+    },
+    
+
     "inlineStyle": {
       "description": "Specifies if the style will be in the ts file.",
       "type": "boolean",
