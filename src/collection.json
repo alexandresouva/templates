@@ -5,6 +5,11 @@
       "description": "A blank schematic.",
       "factory": "./templates/index#templates",
       "schema": "./templates/schema.json"
+    },
+    "npmRun": {
+      "private": true,
+      "description": "Executa um comando npm dentro do projeto de destino.",
+      "factory": "./npmRun#npmRun"
     }
   }
 }

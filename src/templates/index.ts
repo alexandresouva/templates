@@ -15,6 +15,7 @@ import { SchemaOptions, SchemaProps } from './schema';
 import { IGenericImport } from '../utils/interfaces';
 import { appComponentHTML, conditionalImports, routes } from './template-data';
 import { getPrefixFromAngularJson } from '../utils/util';
+import { RunSchematicTask } from '@angular-devkit/schematics/tasks';
 
 /**
  * Obtém a lista de imports necessários com base nas opções escolhidas no momento de geração do template.
@@ -62,6 +63,9 @@ export function templates(options: SchemaOptions): Rule {
       addImportsToAppModule(imports),
       addHTMLToAppComponent(appComponentHTML),
       () => addRoutesAndImportsToRoutingModule(routes),
+      () => {
+        context.addTask(new RunSchematicTask('npmRun', { script: 'lint:fix' }));
+      },
     ])(tree, context);
   };
 }
