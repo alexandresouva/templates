@@ -2,12 +2,12 @@ import { IGenericImport, IRouteImport } from '../utils/interfaces';
 import { SchemaProps } from './schema';
 
 /**
- * Mapeia todas as variações possíveis do template.
+ * Mapeia todas os valores possíveis (personalizações) do template.
  */
 export type TemplateVariations = SchemaProps[keyof SchemaProps];
 
 /**
- * Imports necessários para a variação de template escolhida. Utilize como chave as possíveis escolhas para o template (variações) e como valor os imports que devem ser adicionados.
+ * Imports necessários para o correto carregamento da variação de template escolhida.
  */
 export const conditionalImports: Record<TemplateVariations, IGenericImport[]> =
   {

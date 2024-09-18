@@ -70,6 +70,7 @@ export function getPrefixFromAngularJson(tree: Tree): string {
     );
   }
 
+  // Obtém o conteúdo do arquivo angular.json
   const angularConfigContent = angularConfigBuffer.toString('utf-8');
   const angularConfig = JSON.parse(angularConfigContent);
 

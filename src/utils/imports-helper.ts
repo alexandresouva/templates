@@ -45,7 +45,7 @@ export function addHTMLToAppComponent(content: string): Rule {
 
     const contentString = fileContent.toString();
 
-    // Interrompe o fluxo se o conteúdo HTML já estiver no arquivo
+    // Interrompe o fluxo se o conteúdo HTML a ser adicionado já estiver no arquivo
     if (contentString.includes(content)) {
       return tree;
     }
@@ -80,6 +80,7 @@ export function addImportsToAppModule(
       );
     }
 
+    // Obtém o SourceFile (representação do arquivo) do app.module.ts
     const sourceFile = getSourceFile(targetAppModulePath, tree);
 
     // Obtem os imports que faltam no app.module.ts
@@ -89,6 +90,7 @@ export function addImportsToAppModule(
       appModuleImports
     );
 
+    // Adiciona as importações ao app.module.ts
     const recorder = tree.beginUpdate(targetAppModulePath);
     missingImports.forEach((importItem) => {
       if (importItem instanceof InsertChange) {
@@ -100,12 +102,23 @@ export function addImportsToAppModule(
   };
 }
 
+/**
+ * Mapeia tipos específicos de arquivos (como componentes, serviços, módulos, etc.) e retorna um array
+ * de objetos `Change` com as alterações a serem aplicadas ao arquivo do módulo.
+ *
+ * @param {ts.SourceFile} sourceFile - O arquivo fonte do `NgModule` no qual as importações serão adicionadas.
+ * @param {string} modulePath - O caminho do arquivo do módulo onde as alterações serão feitas.
+ * @param {IGenericImport[]} importsToProcess - A lista de importações que precisam ser verificadas e processadas.
+ *
+ * @returns {Change[]} Um array de objetos `Change` que representam as alterações a serem aplicadas ao arquivo do módulo.
+ */
 function getMissingImports(
   sourceFile: ts.SourceFile,
   modulePath: string,
   importsToProcess: IGenericImport[]
 ): Change[] {
-  // Mapeia os tipos de arquivos para suas respectivas funções de tratamento
+  // Mapeia os tipos de arquivos para suas respectivas funções de tratamento.
+  // Cada tipo de arquivo tem uma função que define como ele deve ser importado no NgModule.
   const handlers: {
     [key: string]: (
       sourceFile: ts.SourceFile,
@@ -135,9 +148,11 @@ function getMissingImports(
   return importsToProcess
     .filter(({ classifiedName }) => classifiedName !== 'NgModule')
     .flatMap(({ classifiedName, importPath }) => {
+      // Verifica qual handler (função) deve ser usado com base no sufixo do nome classificado
       const handler = Object.keys(handlers).find((key) =>
         classifiedName.endsWith(key)
       );
+      // Se houver um handler correspondente, aplica-o para gerar as alterações no NgModule
       return handler
         ? handlers[handler](sourceFile, modulePath, classifiedName, importPath)
         : [];

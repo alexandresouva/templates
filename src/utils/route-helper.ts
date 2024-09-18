@@ -36,7 +36,7 @@ export function addRoutesAndImportsToRoutingModule(
     // Obtém o texto completo do arquivo app-routing.module.ts
     const appRoutingText = sourceFile.getFullText();
 
-    // Encontra o início e fim do array de rotas
+    // Encontra a posição de início e fim do array de rotas
     const routesArrayStart =
       appRoutingText.indexOf('const routes: Routes = [') +
       'const routes: Routes = ['.length;
@@ -132,6 +132,7 @@ export function addRoutesAndImportsToRoutingModule(
  * @param sourceFile - O SourceFile do app-routing.module.ts do projeto.
  * @param modulePath - Caminho para o app-routing.module.ts.
  * @param importsToProcess - Lista de importações a serem adicionadas. Cada importação deve conter o nome classificado e o caminho do módulo.
+ *
  * @returns Um array de mudanças necessárias para adicionar as importações ao arquivo de roteamento.
  */
 function getImportChanges(

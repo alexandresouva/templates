@@ -40,17 +40,18 @@ function getImportsBasedOnSchemaProperties(
 }
 
 /**
- * Função principal para o schematic que aplica as mudanças baseadas nas opções fornecidas.
+ * Função principal que retorna a Rule (regra) com as mudanças a serem aplicadas no projeto de destino.
  *
- * @param options - Opções fornecidas pelo usuário, que incluem propriedades do schema e outros parâmetros.
- * @returns Rule que aplica as mudanças no projeto, incluindo a adição de componentes, imports e rotas.
+ * @param options - Opções fornecidas pelo usuário, que incluem propriedades nativas do schema e
+ * outros parâmetros personalizados.
+ * @returns Rule contendo as mudanças a serem aplicadas.
  */
 export function templates(options: SchemaOptions): Rule {
   const imports = getImportsBasedOnSchemaProperties(options);
 
   return (tree: Tree, context: SchematicContext) => {
     // A sigla é obtida a partir do angular.json do projeto de destino
-    // e atribuída a variável "name", que é necessária para funcionamento do schematics
+    // e atribuída a variável "name", que é necessária para o funcionamento do schematics
     const processedOptions = {
       ...options,
       name: getPrefixFromAngularJson(tree),
