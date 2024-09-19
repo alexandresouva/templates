@@ -13,7 +13,7 @@
     },
     "name": {
       "type": "string",
-      "description": "Sigla da equipe. O nome da propriedade 'name' não deve ser alterado no JSON por questões de compatibilidade com a lib do Angular CDK.",
+      "description": "Sigla da equipe. O nome da propriedade 'name' não deve ser alterado no JSON por questões de compatibilidade com a lib do Angular CDK. Para todos os fins, name === sigla.",
       "$default": {
         "$source": "argv",
         "index": 0

@@ -8,8 +8,8 @@ import { addRouteDeclarationToModule } from '@angular/cdk/schematics';
 
 import { Change, InsertChange } from '@schematics/angular/utility/change';
 import ts = require('typescript');
-import { IGenericImport, IRouteImport } from './interfaces';
-import { findImportInsertionIndex, getSourceFile } from './util';
+import { IGenericImport, IRouteImport } from '../interfaces/imports.interface';
+import { findImportInsertionIndex, getSourceFile } from './utils';
 
 /**
  * Adiciona rotas e importações ao módulo de roteamento.

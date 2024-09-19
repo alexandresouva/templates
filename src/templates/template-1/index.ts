@@ -1,23 +1,22 @@
-import {
-  chain,
-  Rule,
-  SchematicContext,
-  Tree,
-} from '@angular-devkit/schematics';
-import { buildComponent } from '@angular/cdk/schematics';
-import { RunSchematicTask } from '@angular-devkit/schematics/tasks';
+// Angular e Schematics
+import { Rule } from '@angular-devkit/schematics';
 
+// Configurações específicas do template
 import { SchemaOptions, SchemaProps } from './schema';
 import { appComponentHTML, conditionalImports, routes } from './template-data';
-import { IGenericImport } from '../../utils/interfaces';
-import {
-  addHTMLToAppComponent,
-  addImportsToAppModule,
-  ESSENTIALS_IMPORTS,
-} from '../../utils/imports-helper';
-import { getPrefixFromAngularJson } from '../../utils/util';
-import { addRoutesAndImportsToRoutingModule } from '../../utils/route-helper';
 
+// Helpers
+import { ESSENTIALS_IMPORTS } from '../../utils/helpers/imports-helper';
+import { IGenericImport } from '../../utils/interfaces/imports.interface';
+import { createTemplateRule } from '../../utils/helpers/template-generator';
+
+/**
+ * Obtém a lista de imports necessários com base nas opções escolhidas no momento de geração do template.
+ * Esta função deve ser personalizada para cada novo template criado, caso deseje separar os imports.
+ *
+ * @param props - Objeto contendo as propriedades do schema para determinar quais imports incluir.
+ * @returns Array de objetos IGenericImport com as importações combinadas.
+ */
 function getImportsBasedOnSchemaProperties(
   props: SchemaProps
 ): IGenericImport[] {
@@ -29,81 +28,14 @@ function getImportsBasedOnSchemaProperties(
   return imports;
 }
 
-// Capture apenas arquivos da pasta 'src/app'
-function captureTreeState(
-  tree: Tree,
-  rootPath: string = '/src/app'
-): Map<string, string> {
-  const fileMap = new Map<string, string>();
-  tree.getDir(rootPath).visit((path) => {
-    const content = tree.read(path);
-    if (content) {
-      fileMap.set(path, content.toString());
-    }
-  });
-  return fileMap;
-}
-
-// Retorna se houve ou não mudanças
-function hasChanges(
-  originalState: Map<string, string>,
-  currentState: Map<string, string>
-): boolean {
-  if (originalState.size !== currentState.size) {
-    return true;
-  }
-
-  for (const [path, originalContent] of originalState) {
-    const currentContent = currentState.get(path);
-    if (originalContent !== currentContent) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
+/**
+ * Cria uma regra de template com base nas opções fornecidas.
+ *
+ * @param {SchemaOptions} options - Opções que definem os imports e configurações do template.
+ * @returns {Rule} - Regra para aplicar o template ao projeto.
+ */
 export function template1(options: SchemaOptions): Rule {
   const imports = getImportsBasedOnSchemaProperties(options);
 
-  return (tree: Tree, context: SchematicContext) => {
-    const originalState = captureTreeState(tree);
-
-    const processedOptions = {
-      ...options,
-      name: getPrefixFromAngularJson(tree),
-    };
-
-    return chain([
-      () => {
-        context.logger.info(`
-          ____    ___        __  _____ _____ __  __ ____  _        _  _____ _____ ____  
-         / ___|  / \\ \\      / / |_   _| ____|  \\/  |  _ \\| |      / \\|_   _| ____/ ___| 
-        | |  _  / _ \\ \\ /\\ / /    | | |  _| | |\\/| | |_) | |     / _ \\ | | |  _| \\___ \\ 
-        | |_| |/ ___ \\ V  V /     | | | |___| |  | |  __/| |___ / ___ \\| | | |___ ___) |
-         \\____/_/   \\_\\_/\\_/      |_| |_____|_|  |_|_|   |_____/_/   \\_\\_| |_____|____/  
-       `);
-      },
-      buildComponent({ ...processedOptions, skipImport: true }),
-      addImportsToAppModule(imports),
-      addHTMLToAppComponent(appComponentHTML),
-      () => addRoutesAndImportsToRoutingModule(routes),
-      (tree: Tree, context: SchematicContext) => {
-        const currentState = captureTreeState(tree);
-        if (hasChanges(originalState, currentState)) {
-          context.logger.info('Changes were detected.');
-          // Executa o comando npm run lint:fix ao detectar mudanças
-          context.addTask(
-            new RunSchematicTask('npmRun', { script: 'lint:fix' })
-          );
-        } else {
-          context.logger.info(
-            'O seu projeto está atualizado! Nenhuma mudança é necessária.'
-          );
-          // Se não houver mudanças, interrompe a cadeia aqui
-          return;
-        }
-      },
-    ])(tree, context);
-  };
+  return createTemplateRule(options, appComponentHTML, imports, routes);
 }
