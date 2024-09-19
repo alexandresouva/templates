@@ -1,4 +1,4 @@
-import { IGenericImport, IRouteImport } from '../utils/interfaces';
+import { IGenericImport, IRouteImport } from '../../utils/interfaces';
 import { SchemaProps } from './schema';
 
 /**

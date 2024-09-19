@@ -3,13 +3,13 @@
   "schematics": {
     "templates": {
       "description": "A blank schematic.",
-      "factory": "./templates/index#templates",
-      "schema": "./templates/schema.json"
+      "factory": "./templates/template-1/index#template1",
+      "schema": "./templates/template-1/schema.json"
     },
     "npmRun": {
       "private": true,
       "description": "Executa um comando npm dentro do projeto de destino.",
-      "factory": "./npmRun#npmRun"
+      "factory": "./shared-schematics/npmRun#npmRun"
     }
   }
 }
