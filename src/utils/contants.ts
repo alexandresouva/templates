@@ -11,3 +11,5 @@ export const LOG_PHASES = {
   success: '✅ Projeto atualizado com sucesso! \n',
   noChanges: 'Nenhuma mudança foi detectada. O seu projeto está atualizado!',
 };
+
+export const DLS_MIN_VERSION = '16.0.0';

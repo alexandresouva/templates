@@ -89,3 +89,54 @@ export function getPrefixFromAngularJson(tree: Tree): string {
 
   return project.prefix;
 }
+
+/**
+ * Obtém a versão de uma dependência especificada no arquivo package.json.
+ *
+ * @param {Tree} tree - A árvore de arquivos do projeto.
+ * @param {string} dependencyName - O nome da dependência (sem o @).
+ * @returns {string} A versão da dependência.
+ * @throws {SchematicsException} Se o arquivo package.json não existir ou a dependência não estiver instalada.
+ */
+export function getDependencyFromPackageJSON(
+  tree: Tree,
+  dependencyName: string
+): string {
+  const packageJSONPath: string = '/package.json';
+
+  if (!tree.exists(packageJSONPath)) {
+    throw new SchematicsException(
+      'Não foi possível encontrar o arquivo package.json no projeto.'
+    );
+  }
+
+  const packageJsonBuffer = tree.read(packageJSONPath);
+  if (!packageJsonBuffer) {
+    throw new SchematicsException('Erro ao ler o arquivo package.json.');
+  }
+
+  // Obtém o conteúdo do package.json em forma de JSON
+  const packageJson: {
+    dependencies?: Record<string, string>;
+    devDependencies?: Record<string, string>;
+  } = JSON.parse(packageJsonBuffer.toString());
+
+  // Obtém as dependências e devDependencias
+  const dependencies: Record<string, string> = packageJson.dependencies || {};
+  const devDependencies: Record<string, string> =
+    packageJson.devDependencies || {};
+
+  // Tenta encontrar a dependência nas dependências e devDependências
+  let version: string | undefined =
+    dependencies[dependencyName] || devDependencies[dependencyName];
+
+  if (!version) {
+    throw new SchematicsException(
+      `O pacote "${dependencyName}" não está instalado no projeto.`
+    );
+  }
+
+  version = version.replace(/[^0-9.]/g, '');
+
+  return version;
+}

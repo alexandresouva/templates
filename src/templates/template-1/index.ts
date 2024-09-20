@@ -8,7 +8,7 @@ import { appComponentHTML, conditionalImports, routes } from './template-data';
 // Helpers
 import { ESSENTIALS_IMPORTS } from '../../utils/helpers/imports-helper';
 import { IGenericImport } from '../../utils/interfaces/imports.interface';
-import { createTemplateRule } from '../../utils/helpers/template-generator';
+import { getTemplateRule } from '../../utils/helpers/template-generator';
 
 /**
  * Obtém a lista de imports necessários com base nas opções escolhidas no momento de geração do template.
@@ -37,5 +37,5 @@ function getImportsBasedOnSchemaProperties(
 export function template1(options: SchemaOptions): Rule {
   const imports = getImportsBasedOnSchemaProperties(options);
 
-  return createTemplateRule(options, appComponentHTML, imports, routes);
+  return getTemplateRule(options, appComponentHTML, imports, routes);
 }
