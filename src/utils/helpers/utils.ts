@@ -92,12 +92,11 @@ export function getPrefixFromAngularJson(tree: Tree): string {
 }
 
 /**
- * Obtém a versão de uma dependência especificada no arquivo package.json.
+ * Obtém todas as dependências do projeto.
  *
  * @param {Tree} tree - A árvore de arquivos do projeto.
- * @param {string} dependencyName - O nome da dependência (sem o @).
- * @returns {string} A versão da dependência.
- * @throws {SchematicsException} Se o arquivo package.json não existir ou a dependência não estiver instalada.
+ * @returns {IDependencies} As dependências do projeto.
+ * @throws {SchematicsException} Se o arquivo package.json não existir ou não for lido.
  */
 export function getAllProjectDependencies(tree: Tree): IDependencies {
   const packageJSONPath: string = '/package.json';

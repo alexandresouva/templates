@@ -57,11 +57,9 @@ export function getTemplateRule(
       const dependenciesText = getMissingDependenciesText(
         missingRequiredDependencies
       );
-      context.logger.error(
-        `O projeto atual não possui as seguintes dependências: ${dependenciesText}.\n`
-      );
+      context.logger.error(dependenciesText);
       context.logger.info(
-        `Essas dependências são essenciais para garantir a correta estilização e funcionamento do template gerado. Para resolver o problema, você pode: \n\n 1) Gerar o projeto utilizando o gaw-cli (https://example.com.br). \n 2) Atualizar o projeto atual executando o seguinte comando:\n\nnpm install ${missingRequiredDependencies.join(
+        `Sem ela(s), não é possível garantir a correta estilização e funcionamento do template gerado. Para resolver o problema, você pode: \n\n 1) Gerar o projeto utilizando o gaw-cli (https://example.com.br). \n 2) Atualizar o projeto atual executando o seguinte comando:\n\nnpm install ${missingRequiredDependencies.join(
           ' '
         )}\n\nEm seguida, tente novamente.`
       );
