@@ -2,6 +2,7 @@ import { SchematicsException, Tree } from '@angular-devkit/schematics';
 
 import ts = require('typescript');
 import * as fs from 'fs';
+import { IDependencies } from '../interfaces/dependencies.intarface';
 
 /**
  * Obtem o conteúdo de um arquivo TypeScript a partir de um caminho fornecido.
@@ -98,10 +99,7 @@ export function getPrefixFromAngularJson(tree: Tree): string {
  * @returns {string} A versão da dependência.
  * @throws {SchematicsException} Se o arquivo package.json não existir ou a dependência não estiver instalada.
  */
-export function getDependencyFromPackageJSON(
-  tree: Tree,
-  dependencyName: string
-): string {
+export function getAllProjectDependencies(tree: Tree): IDependencies {
   const packageJSONPath: string = '/package.json';
 
   if (!tree.exists(packageJSONPath)) {
@@ -126,17 +124,32 @@ export function getDependencyFromPackageJSON(
   const devDependencies: Record<string, string> =
     packageJson.devDependencies || {};
 
+  return {
+    dependencies,
+    devDependencies,
+  };
+}
+
+/**
+ * Obtém a versão de uma dependência especificada no arquivo package.json.
+ *
+ * @param {Tree} tree - A árvore de arquivos do projeto.
+ * @param {string} dependencyName - O nome da dependência.
+ *
+ * @returns {string} A versão da dependência.
+ */
+export function getDependencyFromPackageJSON(
+  tree: Tree,
+  dependencyName: string
+): string | undefined {
+  const { dependencies, devDependencies } = getAllProjectDependencies(tree);
+
   // Tenta encontrar a dependência nas dependências e devDependências
-  let version: string | undefined =
-    dependencies[dependencyName] || devDependencies[dependencyName];
+  let version = dependencies[dependencyName] || devDependencies[dependencyName];
 
   if (!version) {
-    throw new SchematicsException(
-      `O pacote "${dependencyName}" não está instalado no projeto.`
-    );
+    return;
   }
 
-  version = version.replace(/[^0-9.]/g, '');
-
-  return version;
+  return version.replace(/[^0-9.]/g, '');
 }

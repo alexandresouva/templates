@@ -3,6 +3,7 @@ import {
   noop,
   Rule,
   SchematicContext,
+  SchematicsException,
   Tree,
 } from '@angular-devkit/schematics';
 import { RunSchematicTask } from '@angular-devkit/schematics/tasks';
@@ -10,12 +11,13 @@ import { buildComponent } from '@angular/cdk/schematics';
 
 import { IGenericImport, IRouteImport } from '../interfaces/imports.interface';
 import { getTreeState, hasTreeChanges } from './tree-helper';
-import { DLS_MIN_VERSION, LOG_PHASES } from '../contants';
+import { LOG_PHASES, REQUIRED_DEPENDENCIES } from '../contants';
 import { addImportsToAppModule } from './imports-helper';
 import { addHTMLToAppComponent } from './html-helper';
 import { addRoutesAndImportsToRoutingModule } from './route-helper';
 import { INPMRunParams } from '../interfaces/npm-run.interface';
 import {
+  getAllProjectDependencies,
   getDependencyFromPackageJSON,
   getPrefixFromAngularJson,
 } from './utils';
@@ -24,7 +26,7 @@ import inquirer from 'inquirer';
 const semver = require('semver');
 
 /**
- * Regra de geração de template que valida a versão do DLS e, se necessário, solicita confirmação do usuário para prosseguir com a geração, caso a versão esteja abaixo da mínima recomendada.
+ * Controla a geração de template a partir da validação das versões de dependências do projeto.
  *
  * @param {any} options - SchemaOptions para personalizar o template, varia de acordo para o template.
  * @param {string} appComponentHTML - Conteúdo HTML a ser adicionado ao `app.component.html`.
@@ -40,17 +42,47 @@ export function getTemplateRule(
   routes: IRouteImport[]
 ): Rule {
   return async (tree: Tree, context: SchematicContext): Promise<Rule> => {
-    const dlsCurrentVersion = getDependencyFromPackageJSON(
-      tree,
-      '@angular/core'
-    );
+    const { dependencies, devDependencies } = getAllProjectDependencies(tree);
+    const missingRequiredDependencies: string[] = [];
+
+    // Verifica se todas as dependências do projeto estão instaladas
+    for (const [name] of Object.entries(REQUIRED_DEPENDENCIES)) {
+      if (!dependencies[name] && !devDependencies[name]) {
+        missingRequiredDependencies.push(name);
+      }
+    }
+
+    // Se existirem dependências ausentes, exibe uma mensagem de erro
+    if (missingRequiredDependencies.length > 0) {
+      const dependenciesText = getMissingDependenciesText(
+        missingRequiredDependencies
+      );
+      context.logger.error(
+        `O projeto atual não possui as seguintes dependências: ${dependenciesText}.\n`
+      );
+      context.logger.info(
+        `Essas dependências são essenciais para garantir a correta estilização e funcionamento do template gerado. Para resolver o problema, você pode: \n\n 1) Gerar o projeto utilizando o gaw-cli (https://example.com.br). \n 2) Atualizar o projeto atual executando o seguinte comando:\n\nnpm install ${missingRequiredDependencies.join(
+          ' '
+        )}\n\nEm seguida, tente novamente.`
+      );
+      return noop();
+    }
+
+    const dlsCurrentVersion = getDependencyFromPackageJSON(tree, 'dls-angular');
+
+    if (!semver.valid(dlsCurrentVersion)) {
+      throw new SchematicsException(
+        'Erro ao obter a versão da biblioteca "dls-angular".'
+      );
+    }
 
     // Se a versão do dls for inferior à versão mínima, exige uma confirmação antes de gerar o template
-    if (!semver.gte(dlsCurrentVersion, DLS_MIN_VERSION)) {
+    const dlsMinVersion = REQUIRED_DEPENDENCIES['dls-angular'];
+    if (!semver.gte(dlsCurrentVersion, dlsMinVersion)) {
       const answers = await inquirer.prompt([
         {
           name: 'dlsVersion',
-          message: `Você está usando uma versão da biblioteca "dls-angular" anterior à versão ${DLS_MIN_VERSION}, que foi a base para a construção deste template. Isto pode gerar resultados inesperados. Deseja continuar?`,
+          message: `Você está usando uma versão da biblioteca "dls-angular" anterior à versão ${dlsMinVersion}, que foi a base para a construção deste template. Isto pode gerar resultados inesperados. Deseja continuar?`,
           type: 'confirm',
         },
       ]);
@@ -123,4 +155,23 @@ export function createTemplateRule(
       },
     ])(tree, context);
   };
+}
+
+/**
+ * Formata uma mensagem sobre as dependências ausentes em um projeto.
+ *
+ * @param {string[]} dependencies - Um array de nomes de dependências que estão faltando.
+ *
+ * @returns {string} Uma mensagem formatada indicando as dependências que estão faltando.
+ */
+function getMissingDependenciesText(dependencies: string[]): string {
+  const baseMessage = `O projeto atual não possui`;
+  if (dependencies.length === 1) {
+    return `${baseMessage} a dependência: ${dependencies[0]}`;
+  } else {
+    const lastDependency = dependencies.pop();
+    return `${baseMessage} as dependências ${dependencies.join(
+      ', '
+    )} e ${lastDependency}`;
+  }
 }

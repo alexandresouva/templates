@@ -12,4 +12,9 @@ export const LOG_PHASES = {
   noChanges: 'Nenhuma mudança foi detectada. O seu projeto está atualizado!',
 };
 
-export const DLS_MIN_VERSION = '16.0.0';
+export const REQUIRED_DEPENDENCIES = {
+  'dls-angular': '16.0.0',
+  // 'dls-base-components': '16.0.0',
+  // 'dls-fonts': '1.0.5',
+  // 'dls-icons': '1.6.10',
+};
