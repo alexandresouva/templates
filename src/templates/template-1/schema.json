@@ -30,7 +30,8 @@
           {"value": "paginacao", "label": "Paginação"},
           {"value": "scroll-infinito", "label": "Scroll Infinito"}
         ]
-      }
+      },
+      "alias": "tabela"
     },
     
 
