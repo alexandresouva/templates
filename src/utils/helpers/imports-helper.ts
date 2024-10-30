@@ -16,9 +16,9 @@ import { IGenericImport } from '../interfaces/imports.interface';
 import { getSourceFile } from './utils';
 
 /**
- * Imports essenciais que serão usados em todos os templates.
+ * Imports necessários que serão usados em todos os templates.
  */
-export const ESSENTIALS_IMPORTS: IGenericImport[] = [];
+export const REQUIRED_IMPORTS: IGenericImport[] = [];
 
 /**
  * Adiciona importações ao app.module.ts a partir de um array de IImport.

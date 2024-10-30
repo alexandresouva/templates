@@ -10,6 +10,11 @@ import { SchemaProps } from './schema';
 export type TemplateVariations = SchemaProps[keyof SchemaProps];
 
 /**
+ * Imports necessários para este template, independente da variação escolhida.
+ */
+export const TEMPLATE_BASE_IMPORTS: IGenericImport[] = [];
+
+/**
  * Imports necessários para o correto carregamento da variação de template escolhida.
  */
 export const conditionalImports: Record<TemplateVariations, IGenericImport[]> =

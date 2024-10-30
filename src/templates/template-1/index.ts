@@ -3,10 +3,15 @@ import { Rule } from '@angular-devkit/schematics';
 
 // Configurações específicas do template
 import { SchemaOptions, SchemaProps } from './schema';
-import { appComponentHTML, conditionalImports, routes } from './template-data';
+import {
+  appComponentHTML,
+  conditionalImports,
+  routes,
+  TEMPLATE_BASE_IMPORTS,
+} from './template-data';
 
 // Helpers
-import { ESSENTIALS_IMPORTS } from '../../utils/helpers/imports-helper';
+import { REQUIRED_IMPORTS } from '../../utils/helpers/imports-helper';
 import { IGenericImport } from '../../utils/interfaces/imports.interface';
 import { getTemplateRule } from '../../utils/helpers/template-generator';
 
@@ -20,8 +25,10 @@ import { getTemplateRule } from '../../utils/helpers/template-generator';
 function getImportsBasedOnSchemaProperties(
   props: SchemaProps
 ): IGenericImport[] {
+  // Une os imports mínimos para um projeto Angular e para este    template
+  let imports = [...REQUIRED_IMPORTS, ...TEMPLATE_BASE_IMPORTS];
+
   const { paginationType } = props;
-  let imports = [...ESSENTIALS_IMPORTS];
   if (paginationType && conditionalImports[paginationType]) {
     imports = imports.concat(conditionalImports[paginationType]);
   }
