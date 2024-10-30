@@ -20,6 +20,7 @@ import {
   getAllProjectDependencies,
   getDependencyFromPackageJSON,
   getPrefixFromAngularJson,
+  hasGitChanges,
 } from './utils';
 
 import inquirer from 'inquirer';
@@ -121,6 +122,19 @@ export function createTemplateRule(
     // Obtém a sigla pelo prefixo e atribui a propriedade name
     options.name = getPrefixFromAngularJson(tree);
 
+    // Verifica se há alterações no Git
+    if (hasGitChanges()) {
+      context.logger.error('\nExistem arquivos modificados ou em staging.\n');
+      const orientations: string[] = [
+        'Por favor, faca o commit ou guarde as alterações antes de executar este comando. Sugestões:',
+        '\n\n  \x1b[32mgit stash\x1b[0m --> guardar alterações em staging.',
+        '\n  \x1b[32mgit add && git commit\x1b[0m --> faz o commit das mudanças.',
+        '\n\nEm seguida, tente gerar o template novamente.',
+      ];
+      context.logger.info(orientations.join(''));
+      return tree;
+    }
+
     // Exibe a mensagem de inicialização `GAW TEMPLATES`.
     context.logger.info(LOG_PHASES.start);
 
@@ -165,11 +179,11 @@ export function createTemplateRule(
 function getMissingDependenciesText(dependencies: string[]): string {
   const baseMessage = `O projeto atual não possui`;
   if (dependencies.length === 1) {
-    return `${baseMessage} a dependência: ${dependencies[0]}`;
+    return `${baseMessage} a dependência: ${dependencies[0]}.`;
   } else {
     const lastDependency = dependencies.pop();
     return `${baseMessage} as dependências ${dependencies.join(
       ', '
-    )} e ${lastDependency}`;
+    )} e ${lastDependency}.`;
   }
 }

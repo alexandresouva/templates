@@ -3,6 +3,7 @@ import { SchematicsException, Tree } from '@angular-devkit/schematics';
 import ts = require('typescript');
 import * as fs from 'fs';
 import { IDependencies } from '../interfaces/dependencies.intarface';
+import { execSync } from 'child_process';
 
 /**
  * Obtem o conteúdo de um arquivo TypeScript a partir de um caminho fornecido.
@@ -151,4 +152,25 @@ export function getDependencyFromPackageJSON(
   }
 
   return version.replace(/[^0-9.]/g, '');
+}
+
+/**
+ * Verifica se existem alterações no repositório Git.
+ *
+ * Esta função executa o comando `git status --porcelain` para determinar se há
+ * arquivos modificados ou em staging.
+ *
+ * @returns {boolean} Retorna `true` se houver alterações não confirmadas ou em
+ *                   staging, caso contrário, retorna `false`.
+ *
+ */
+export function hasGitChanges(): boolean {
+  try {
+    const output = execSync('git status --porcelain', {
+      encoding: 'utf-8',
+    });
+    return output.length > 0;
+  } catch (error) {
+    return false;
+  }
 }
