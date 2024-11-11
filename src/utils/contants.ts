@@ -13,7 +13,7 @@ export const LOG_PHASES = {
 };
 
 export const REQUIRED_DEPENDENCIES = {
-  'dls-angular': '16.0.0',
+  rxjs: 'ˆ16.0.0',
   // 'dls-base-components': '16.0.0',
   // 'dls-fonts': '1.0.5',
   // 'dls-icons': '1.6.10',

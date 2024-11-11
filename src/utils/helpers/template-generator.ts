@@ -3,7 +3,6 @@ import {
   noop,
   Rule,
   SchematicContext,
-  SchematicsException,
   Tree,
 } from '@angular-devkit/schematics';
 import { RunSchematicTask } from '@angular-devkit/schematics/tasks';
@@ -18,12 +17,11 @@ import { addRoutesAndImportsToRoutingModule } from './route-helper';
 import { INPMRunParams } from '../interfaces/npm-run.interface';
 import {
   getAllProjectDependencies,
-  getDependencyFromPackageJSON,
   getPrefixFromAngularJson,
   hasGitChanges,
 } from './utils';
 
-import inquirer from 'inquirer';
+// import inquirer from 'inquirer';
 const semver = require('semver');
 
 /**
@@ -42,18 +40,23 @@ export function getTemplateRule(
   imports: IGenericImport[],
   routes: IRouteImport[]
 ): Rule {
-  return async (tree: Tree, context: SchematicContext): Promise<Rule> => {
-    const { dependencies, devDependencies } = getAllProjectDependencies(tree);
+  return async (_tree: Tree, context: SchematicContext): Promise<Rule> => {
+    const dependencies = getAllProjectDependencies();
     const missingRequiredDependencies: string[] = [];
 
-    // Verifica se todas as dependências do projeto estão instaladas
+    // Cancela a geração do template se não houver dependências (erro npm list)
+    if (!dependencies) {
+      return noop();
+    }
+
+    // Monta o array de dependências mínimas ausentes, caso exista
     for (const [name] of Object.entries(REQUIRED_DEPENDENCIES)) {
-      if (!dependencies[name] && !devDependencies[name]) {
+      if (!dependencies[name]) {
         missingRequiredDependencies.push(name);
       }
     }
 
-    // Se existirem dependências ausentes, exibe uma mensagem de erro
+    // Exibe uma mensagem de erro caso haja dependências requeridas
     if (missingRequiredDependencies.length > 0) {
       const dependenciesText = getMissingDependenciesText(
         missingRequiredDependencies
@@ -67,30 +70,38 @@ export function getTemplateRule(
       return noop();
     }
 
-    const dlsCurrentVersion = getDependencyFromPackageJSON(tree, 'dls-angular');
+    // Verifica se cada dependência requerida instalada está na versão esperada
+    for (const [name, expectedVersion] of Object.entries(
+      REQUIRED_DEPENDENCIES
+    )) {
+      const currentVersion = dependencies[name];
+      const isValidVersion = semver.satisfies(currentVersion, expectedVersion);
 
-    if (!semver.valid(dlsCurrentVersion)) {
-      throw new SchematicsException(
-        'Erro ao obter a versão da biblioteca "dls-angular".'
-      );
-    }
-
-    // Se a versão do dls for inferior à versão mínima, exige uma confirmação antes de gerar o template
-    const dlsMinVersion = REQUIRED_DEPENDENCIES['dls-angular'];
-    if (!semver.gte(dlsCurrentVersion, dlsMinVersion)) {
-      const answers = await inquirer.prompt([
-        {
-          name: 'dlsVersion',
-          message: `Você está usando uma versão da biblioteca "dls-angular" anterior à versão ${dlsMinVersion}, que foi a base para a construção deste template. Isto pode gerar resultados inesperados. Deseja continuar?`,
-          type: 'confirm',
-        },
-      ]);
-
-      if (!answers.dlsVersion) {
-        context.logger.info(`Ok... cancelando a geração do template!`);
+      if (!isValidVersion) {
+        context.logger.error('\nDependência desatualizada!\n');
+        context.logger.info(
+          `A versão da dependência ${name} instalada (${currentVersion}) não satisfaz a versão esperada para o template (${expectedVersion}). Por favor, instale uma versão compatível.\n`
+        );
         return noop();
       }
     }
+
+    // Se a versão do dls for inferior à versão mínima, exige uma confirmação antes de gerar o template
+    // const dlsMinVersion = REQUIRED_DEPENDENCIES['dls-angular'];
+    // if (!semver.gte(dlsCurrentVersion, dlsMinVersion)) {
+    //   const answers = await inquirer.prompt([
+    //     {
+    //       name: 'dlsVersion',
+    //       message: `Você está usando uma versão da biblioteca "dls-angular" anterior à versão ${dlsMinVersion}, que foi a base para a construção deste template. Isto pode gerar resultados inesperados. Deseja continuar?`,
+    //       type: 'confirm',
+    //     },
+    //   ]);
+
+    //   if (!answers.dlsVersion) {
+    //     context.logger.info(`Ok... cancelando a geração do template!`);
+    //     return noop();
+    //   }
+    // }
 
     // Continua o fluxo normal se a versão for compatível
     return chain([

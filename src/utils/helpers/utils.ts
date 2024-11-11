@@ -2,7 +2,6 @@ import { SchematicsException, Tree } from '@angular-devkit/schematics';
 
 import ts = require('typescript');
 import * as fs from 'fs';
-import { IDependencies } from '../interfaces/dependencies.intarface';
 import { execSync } from 'child_process';
 
 /**
@@ -92,66 +91,103 @@ export function getPrefixFromAngularJson(tree: Tree): string {
   return project.prefix;
 }
 
+// /**
+//  * Obtém todas as dependências do projeto.
+//  *
+//  * @param {Tree} tree - A árvore de arquivos do projeto.
+//  * @returns {Record<string, string>} As dependências do projeto.
+//  * @throws {SchematicsException} Se o arquivo package.json não existir ou não for lido.
+//  */
+// export function getAllProjectDependencies(tree: Tree): Record<string, string> {
+//   const packageJSONPath: string = '/package.json';
+
+//   if (!tree.exists(packageJSONPath)) {
+//     throw new SchematicsException(
+//       'Não foi possível encontrar o arquivo package.json no projeto.'
+//     );
+//   }
+
+//   const packageJsonBuffer = tree.read(packageJSONPath);
+//   if (!packageJsonBuffer) {
+//     throw new SchematicsException('Erro ao ler o arquivo package.json.');
+//   }
+
+//   // Obtém o conteúdo do package.json em forma de JSON
+//   const packageJson: {
+//     dependencies?: Record<string, string>;
+//     devDependencies?: Record<string, string>;
+//   } = JSON.parse(packageJsonBuffer.toString());
+
+//   // Obtém e retorna todas as dependências
+//   // Combina as dependências e devDependências em um único objeto
+//   const allDependencies: Record<string, string> = {
+//     ...packageJson.dependencies,
+//     ...packageJson.devDependencies,
+//   };
+
+//   return allDependencies;
+// }
+
 /**
- * Obtém todas as dependências do projeto.
+ * Obtém todas as dependências do projeto usando `npm list`.
  *
- * @param {Tree} tree - A árvore de arquivos do projeto.
- * @returns {IDependencies} As dependências do projeto.
- * @throws {SchematicsException} Se o arquivo package.json não existir ou não for lido.
+ * @returns {IDependencies} Um objeto contendo todas as dependências do projeto.
  */
-export function getAllProjectDependencies(tree: Tree): IDependencies {
-  const packageJSONPath: string = '/package.json';
+export function getAllProjectDependencies():
+  | Record<string, string>
+  | undefined {
+  const dependencies: Record<string, string> = {};
 
-  if (!tree.exists(packageJSONPath)) {
-    throw new SchematicsException(
-      'Não foi possível encontrar o arquivo package.json no projeto.'
+  try {
+    // Executa o comando npm list para obter todas as dependências com `--json`
+    const output = execSync('npm list --depth=0 --json', {
+      encoding: 'utf-8',
+    });
+    const parsedOutput = JSON.parse(output);
+
+    // Itera sobre as dependências e as adiciona diretamente ao objeto dependencies
+    if (parsedOutput.dependencies) {
+      for (const [name, info] of Object.entries(parsedOutput.dependencies)) {
+        if (typeof info === 'object' && info !== null && 'version' in info) {
+          dependencies[name] = (info as { version: string }).version;
+        }
+      }
+    }
+  } catch (_error) {
+    console.error(
+      '\n Ocorreu um erro ao listar as dependências do projeto. Veja o log acima. \n'
     );
+    return undefined;
   }
-
-  const packageJsonBuffer = tree.read(packageJSONPath);
-  if (!packageJsonBuffer) {
-    throw new SchematicsException('Erro ao ler o arquivo package.json.');
-  }
-
-  // Obtém o conteúdo do package.json em forma de JSON
-  const packageJson: {
-    dependencies?: Record<string, string>;
-    devDependencies?: Record<string, string>;
-  } = JSON.parse(packageJsonBuffer.toString());
-
-  // Obtém as dependências e devDependencias
-  const dependencies: Record<string, string> = packageJson.dependencies || {};
-  const devDependencies: Record<string, string> =
-    packageJson.devDependencies || {};
-
-  return {
-    dependencies,
-    devDependencies,
-  };
+  return dependencies;
 }
 
 /**
- * Obtém a versão de uma dependência especificada no arquivo package.json.
+ * Obtém a versão de uma dependência específica instalada no projeto.
  *
- * @param {Tree} tree - A árvore de arquivos do projeto.
- * @param {string} dependencyName - O nome da dependência.
+ * Executa o comando `npm list` para buscar a versão instalada de uma dependência e retorna a versão encontrada.
+ * Caso ocorra um erro durante a execução do comando ou se a dependência não for encontrada, retorna `undefined`.
  *
- * @returns {string} A versão da dependência.
+ * @param {string} dependencyName - O nome da dependência da qual se deseja obter a versão.
+ * @returns {string | undefined} - A versão da dependência, caso encontrada, ou `undefined` se não for possível obter a versão.
  */
-export function getDependencyFromPackageJSON(
-  tree: Tree,
+export function getDependencyVersion(
   dependencyName: string
 ): string | undefined {
-  const { dependencies, devDependencies } = getAllProjectDependencies(tree);
+  try {
+    // Executa o comando npm list para a dependência específica
+    const output = execSync(`npm list ${dependencyName} --depth=0 --json`, {
+      encoding: 'utf-8',
+    });
+    const parsedOutput = JSON.parse(output);
 
-  // Tenta encontrar a dependência nas dependências e devDependências
-  let version = dependencies[dependencyName] || devDependencies[dependencyName];
-
-  if (!version) {
-    return;
+    // Obtém a versão da dependência do JSON retornado
+    const version = parsedOutput.dependencies?.[dependencyName]?.version;
+    return version;
+  } catch (error) {
+    console.error(`Erro ao obter a versão da dependência ${dependencyName}:`);
+    return undefined;
   }
-
-  return version.replace(/[^0-9.]/g, '');
 }
 
 /**
